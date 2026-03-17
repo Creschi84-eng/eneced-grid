@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENECED GRID – Local-First Chat Analysis Tool</title>
+  <meta name="description" content="ENECED GRID is a local-first chat analysis tool that analyzes large chat histories and reveals decisions, topics, patterns, and important insights hidden in communication." />
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --bg2:#111722;
+      --card:#121926;
+      --line:#243041;
+      --text:#eef4ff;
+      --muted:#9ca9ba;
+      --blue:#2a7fff;
+      --blue2:#5aa0ff;
+      --ok:#b7d2ff;
+      --shadow:0 0 0 1px rgba(42,127,255,.10), 0 10px 30px rgba(0,0,0,.28);
+      --radius:18px;
+      --max:1160px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(42,127,255,.18), transparent 28%),
+        radial-gradient(circle at 100% 10%, rgba(90,160,255,.10), transparent 25%),
+        linear-gradient(180deg, #0a0f15 0%, #0b0f14 35%, #0d131c 100%);
+      line-height:1.5;
+    }
+    .gridbg:before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:36px 36px;
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.55), transparent 80%);
+      pointer-events:none;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+    .nav{
+      position:sticky;top:0;z-index:10;
+      backdrop-filter: blur(14px);
+      background:rgba(10,15,21,.72);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .navin{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
+    .brand{display:flex;gap:12px;align-items:center;font-weight:700;letter-spacing:.02em}
+    .logo{
+      width:34px;height:34px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:2px;
+    }
+    .logo span{
+      display:block;border-radius:4px;background:#1d2735;border:1px solid rgba(255,255,255,.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
+    }
+    .logo span:nth-child(5){
+      background:linear-gradient(180deg,var(--blue2),var(--blue));
+      box-shadow:0 0 18px rgba(42,127,255,.55);
+      border-color:rgba(255,255,255,.18);
+    }
+    .navlinks{display:flex;gap:20px;align-items:center}
+    .navlinks a{color:var(--muted);font-size:14px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      min-height:46px;padding:0 18px;border-radius:12px;border:1px solid transparent;
+      font-weight:700;letter-spacing:.01em;transition:.2s ease;cursor:pointer
+    }
+    .btn.primary{background:linear-gradient(180deg,var(--blue2),var(--blue));color:white;box-shadow:0 10px 26px rgba(42,127,255,.22)}
+    .btn.secondary{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.09);color:var(--text)}
+    .btn:hover{transform:translateY(-1px)}
+    .hero{padding:74px 0 36px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .95fr;gap:30px;align-items:center}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);
+      color:var(--ok);font-size:13px;font-weight:600
+    }
+    h1{font-size:clamp(42px,6vw,72px);line-height:1.02;margin:18px 0 16px;letter-spacing:-.04em}
+    .lead{font-size:19px;color:var(--muted);max-width:720px}
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 18px}
+    .trust{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .pill{
+      padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);color:#d8e5ff;font-size:13px
+    }
+
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+      border-radius:24px;
+      overflow:hidden;
+    }
+    .ui-top{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+    .dot{width:10px;height:10px;border-radius:50%;background:#233142}
+    .dot:nth-child(1){background:#304159}
+    .dot:nth-child(2){background:#375079}
+    .dot:nth-child(3){background:#3e64a6}
+    .ui-body{padding:18px}
+    .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .stat{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:12px
+    }
+    .stat .n{font-size:22px;font-weight:800}
+    .stat .l{font-size:12px;color:var(--muted)}
+    .ui-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+    .mini-card{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:14px;min-height:152px
+    }
+    .mini-title{font-weight:700;margin-bottom:10px}
+    .bars{display:flex;flex-direction:column;gap:8px}
+    .bar{height:10px;border-radius:999px;background:#1d2633;overflow:hidden}
+    .bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),#8ec0ff)}
+    .timeline{display:flex;flex-direction:column;gap:12px}
+    .titem{display:flex;gap:10px;align-items:flex-start}
+    .titem b{
+      width:10px;height:10px;border-radius:50%;background:var(--blue);display:block;margin-top:6px;
+      box-shadow:0 0 12px rgba(42,127,255,.5)
+    }
+    .tmeta{color:var(--muted);font-size:12px}
+    .section{padding:38px 0}
+    .section h2{font-size:clamp(28px,4vw,42px);line-height:1.05;letter-spacing:-.03em;margin:0 0 10px}
+    .section p.intro{color:var(--muted);max-width:800px;margin:0 0 22px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      padding:20px;
+    }
+    .card h3{margin:8px 0 8px;font-size:20px}
+    .card p{margin:0;color:var(--muted)}
+    .icon{
+      width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+      background:rgba(42,127,255,.12);border:1px solid rgba(42,127,255,.24);color:#d6e6ff;font-weight:900
+    }
+    .two{
+      display:grid;grid-template-columns:1fr 1fr;gap:18px
+    }
+    .cred{display:grid;grid-template-columns:1fr .9fr;gap:18px}
+    ul.clean{margin:0;padding-left:18px;color:var(--muted)}
+    ul.clean li{margin:7px 0}
+    .faq{display:grid;gap:12px}
+    .faq details{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;padding:16px
+    }
+    .faq summary{cursor:pointer;font-weight:700}
+    .faq p{margin:10px 0 0;color:var(--muted)}
+    .cta{
+      text-align:center;padding:28px 24px
+    }
+    .cta h2{margin-bottom:8px}
+    footer{padding:26px 0 44px;color:var(--muted)}
+    .foot{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:24px}
+    .foot a{color:#d8e5ff}
+    .small{font-size:14px}
+    @media (max-width: 980px){
+      .hero-grid,.cred,.two,.ui-grid,.cards{grid-template-columns:1fr}
+      .statrow{grid-template-columns:repeat(2,1fr)}
+      .navlinks a.hide-sm{display:none}
+    }
+    @media (max-width: 640px){
+      .navlinks{gap:10px}
+      .navlinks a{display:none}
+      .hero{padding-top:48px}
+      .section{padding:28px 0}
+      .statrow{grid-template-columns:1fr 1fr}
+      .btn{width:100%}
+      .cta-row{display:grid;grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body class="gridbg">
+  <nav class="nav">
+    <div class="wrap navin">
+      <a class="brand" href="#">
+        <div class="logo" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div>ENECED GRID</div>
+      </a>
+      <div class="navlinks">
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#beta">Beta</a>
+        <a href="#faq" class="hide-sm">FAQ</a>
+        <a class="btn primary" href="mailto:hello@eneced.ch?subject=ENECED%20GRID%20Beta">Join the Beta</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Local-First Chat Analysis Tool</div>
+          <h1>Find the decisions hidden in your chats.</h1>
+          <p class="lead">ENECED GRID analyzes large chat histories and reveals the topics, patterns, and decisions hidden in communication — without sending your data to the cloud.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:hello@eneced.ch?subject=Join%20the%20ENECED%20GRID%20Beta">Join the Beta</a>
+            <a class="btn secondary" href="mailto:hello@eneced.ch?subject=Request%20Early%20Access%20for%20ENECED%20GRID">Request Early Access</a>
+          </div>
+          <div class="trust">
+            <span class="pill">Local-First</span>
+            <span class="pill">No Cloud</span>
+            <span class="pill">No Telemetry</span>
+            <span class="pill">100k+ Messages Tested</span>
+          </div>
+        </div>
+
+        <div class="panel" aria-label="Product preview">
+          <div class="ui-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="ui-body">
+            <div class="statrow">
+              <div class="stat"><div class="n">100k+</div><div class="l">Messages</div></div>
+              <div class="stat"><div class="n">14</div><div class="l">Topics</div></div>
+              <div class="stat"><div class="n">23</div><div class="l">Decisions</div></div>
+              <div class="stat"><div class="n">7</div><div class="l">Problems</div></div>
+            </div>
+            <div class="ui-grid">
+              <div class="mini-card">
+                <div class="mini-title">Topic Clusters</div>
+                <div class="bars">
+                  <div class="bar"><i style="width:88%"></i></div>
+                  <div class="bar"><i style="width:71%"></i></div>
+                  <div class="bar"><i style="width:59%"></i></div>
+                  <div class="bar"><i style="width:43%"></i></div>
+                  <div class="bar"><i style="width:35%"></i></div>
+                </div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-title">Decision Timeline</div>
+                <div class="timeline">
+                  <div class="titem"><b></b><div><div>Pricing direction agreed</div><div class="tmeta">Q1 • Decision found</div></div></div>
+                  <div class="titem"><b></b><div><div>Export scope confirmed</div><div class="tmeta">Q2 • Decision found</div></div></div>
+                  <div class="titem"><b></b><div><div>Beta import path approved</div><div class="tmeta">Q3 • Decision found</div></div></div>
+                </div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-title">Important Messages</div>
+                <div class="bars">
+                  <div class="bar"><i style="width:92%"></i></div>
+                  <div class="bar"><i style="width:64%"></i></div>
+                  <div class="bar"><i style="width:77%"></i></div>
+                </div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-title">Communication Overview</div>
+                <div class="bars">
+                  <div class="bar"><i style="width:82%"></i></div>
+                  <div class="bar"><i style="width:55%"></i></div>
+                  <div class="bar"><i style="width:68%"></i></div>
+                  <div class="bar"><i style="width:47%"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section" id="problem">
+      <h2>Important decisions get buried in communication.</h2>
+      <p class="intro">Modern teams make decisions inside chats. Over time, thousands of messages accumulate across WhatsApp, Slack, Teams, email, and AI chats. The result is simple: knowledge is there, but it becomes hard to find, hard to trust, and easy to lose.</p>
+      <div class="cards">
+        <div class="card"><div class="icon">01</div><h3>Decisions disappear</h3><p>Critical decisions are made in conversation, then lost inside long chat histories.</p></div>
+        <div class="card"><div class="icon">02</div><h3>Discussions repeat</h3><p>Teams revisit the same topics because nobody can quickly reconstruct what was already agreed.</p></div>
+        <div class="card"><div class="icon">03</div><h3>Knowledge stays unstructured</h3><p>Valuable communication turns into noise when there is no clear overview of patterns, topics, and outcomes.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="solution">
+      <h2>Turn chat chaos into structured insight.</h2>
+      <p class="intro">ENECED GRID is a local-first chat analysis software built to analyze large chat histories and extract insights from chats. It detects topic clustering, highlights important messages, and helps detect decisions in conversations without moving your data off your computer.</p>
+      <div class="two">
+        <div class="card">
+          <h3>What it does</h3>
+          <ul class="clean">
+            <li>Import large chat histories</li>
+            <li>Analyze communication patterns</li>
+            <li>Detect topic clusters</li>
+            <li>Highlight important messages</li>
+            <li>Reveal hidden decisions</li>
+            <li>Export relevant findings</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Why it matters</h3>
+          <ul class="clean">
+            <li>Faster understanding of large communication archives</li>
+            <li>Better decision memory for founders and teams</li>
+            <li>Clearer communication analysis for research and support</li>
+            <li>Privacy-first workflow for sensitive data</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <h2>Built for large communication analysis.</h2>
+      <p class="intro">ENECED GRID is designed as a stable modular desktop application. The core stays reliable while future capabilities can be added without rebuilding the entire system.</p>
+      <div class="cards">
+        <div class="card"><div class="icon">↥</div><h3>Chat Import</h3><p>Import CSV files, WhatsApp ZIP exports, and copy-paste chat histories.</p></div>
+        <div class="card"><div class="icon">⊞</div><h3>Topic Detection</h3><p>Automatically calculate and explore topic clustering across large conversation datasets.</p></div>
+        <div class="card"><div class="icon">✓</div><h3>Decision Detection</h3><p>Find decision moments hidden inside long discussions and bring them back into view.</p></div>
+        <div class="card"><div class="icon">◎</div><h3>Communication Overview</h3><p>Understand the structure of a conversation faster with summaries and visual analysis blocks.</p></div>
+        <div class="card"><div class="icon">★</div><h3>Important Messages</h3><p>Mark and revisit messages that matter most for context, knowledge, and outcomes.</p></div>
+        <div class="card"><div class="icon">⇩</div><h3>Export</h3><p>Export relevant findings to Markdown and CSV for further use and documentation.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="privacy">
+      <h2>Your data stays on your computer.</h2>
+      <p class="intro">Many chat analysis tools depend on cloud processing. ENECED GRID works differently. This local-first decision intelligence workflow keeps analysis on the user’s machine — no cloud, no telemetry, no external data transfer.</p>
+      <div class="two">
+        <div class="card">
+          <h3>Local-First by design</h3>
+          <ul class="clean">
+            <li>No cloud processing</li>
+            <li>No telemetry</li>
+            <li>No external chat upload</li>
+            <li>Suitable for sensitive communication</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Why local-first matters</h3>
+          <p>For consultants, researchers, founders, support teams, and AI power users, communication often contains sensitive business context. ENECED GRID helps analyze conversations without giving that data away.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="beta">
+      <h2>Beta Status</h2>
+      <p class="intro">ENECED GRID v1.5 BETA is already a stable beta version focused on large chat import, communication analysis, topic clustering, and export of structured findings.</p>
+      <div class="cred">
+        <div class="card">
+          <h3>Current Beta Capabilities</h3>
+          <ul class="clean">
+            <li>Tested with chat histories exceeding <strong>100,000 messages</strong></li>
+            <li>Supports WhatsApp ZIP chat imports</li>
+            <li>CSV import for large datasets</li>
+            <li>Copy-paste chat imports</li>
+            <li>Markdown export</li>
+            <li>CSV export</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Technical Foundation</h3>
+          <ul class="clean">
+            <li>Local-first desktop application</li>
+            <li>React + TypeScript</li>
+            <li>Tauri desktop architecture</li>
+            <li>Web Worker prepared for analysis functions</li>
+            <li>Built with a modular architecture designed for large communication analysis</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="usecases">
+      <h2>Who ENECED GRID is for</h2>
+      <p class="intro">A chat analysis tool is only useful if it solves a real workflow. ENECED GRID is built for people who already live inside communication-heavy environments and need structure, not more noise.</p>
+      <div class="cards">
+        <div class="card"><h3>Consultants</h3><p>Analyze project communication, recover decision structures, and reduce repeated discussions.</p></div>
+        <div class="card"><h3>Researchers</h3><p>Extract structured insights from interviews, discussion logs, and qualitative communication data.</p></div>
+        <div class="card"><h3>AI Power Users</h3><p>Organize large archives of AI chats and reconstruct ideas, themes, and decisions faster.</p></div>
+        <div class="card"><h3>Support Teams</h3><p>Surface recurring problems and important communication patterns hidden inside support conversations.</p></div>
+        <div class="card"><h3>Founders</h3><p>Recover startup decisions from chat-based collaboration and turn messy communication into decision memory.</p></div>
+        <div class="card"><h3>Large Chat Archives</h3><p>Built to analyze large chat histories rather than tiny sample conversations.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <h2>FAQ</h2>
+      <div class="faq">
+        <details open>
+          <summary>What is ENECED GRID?</summary>
+          <p>ENECED GRID is a local-first chat analysis tool that analyzes large chat histories and reveals decisions, topics, patterns, and important insights hidden in communication.</p>
+        </details>
+        <details>
+          <summary>Is ENECED GRID cloud-based?</summary>
+          <p>No. ENECED GRID processes data locally on the user’s computer and is built around a local-first workflow.</p>
+        </details>
+        <details>
+          <summary>Which chat exports can ENECED GRID analyze?</summary>
+          <p>The current beta supports CSV imports, WhatsApp ZIP chat exports, and copy-paste chat histories.</p>
+        </details>
+        <details>
+          <summary>Why does local-first matter?</summary>
+          <p>Local-first helps keep sensitive communication private by avoiding cloud uploads, external transfer, and telemetry-based tracking.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel cta">
+        <h2>Help shape the future of chat analysis.</h2>
+        <p class="intro" style="margin:0 auto 18px">We are currently looking for early users to test ENECED GRID and help shape the next iteration.</p>
+        <div class="cta-row" style="justify-content:center">
+          <a class="btn primary" href="mailto:hello@eneced.ch?subject=Join%20the%20ENECED%20GRID%20Beta">Join the Beta</a>
+          <a class="btn secondary" href="mailto:hello@eneced.ch?subject=Question%20about%20ENECED%20GRID">Contact Us</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="foot small">
+        <div>
+          <div style="font-weight:800;color:var(--text);margin-bottom:6px">ENECED GRID</div>
+          <div>Local-First Software</div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap">
+          <a href="#features">Features</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#usecases">Use Cases</a>
+          <a href="mailto:hello@eneced.ch">hello@eneced.ch</a>
+          <a href="#">eneced.com</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
